@@ -7,11 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
 
-builder.Services.AddResponseCompression(opts =>
-{
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        ["application/octet-stream"]);
-});
+builder.Services.AddResponseCompression();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -40,7 +40,7 @@ public class ChatHub : Hub
         if (Users.TryGetValue(toUsername, out string receiverConnectionId))
         {
             await Clients.Client(receiverConnectionId).SendAsync("ReceivePrivateMessage", fromUsername, message);
-            await Clients.Caller.SendAsync("ReceivePrivateMessage", "-me-", message);
+            await Clients.Caller.SendAsync("ReceivePrivateMessage", "-me", message);
         }
         else
         {
