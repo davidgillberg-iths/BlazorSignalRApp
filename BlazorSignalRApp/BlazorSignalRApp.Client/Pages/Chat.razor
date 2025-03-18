@@ -6,72 +6,80 @@
 
 <PageTitle>Chat</PageTitle>
 
-<div class="col-md-6">
-    <h1>Connect to ChatHub</h1>
-    <div class="form-group">
-        <label>
-            Your user name:
-            <input @bind="myName" />
-        </label>
-    </div>
-    <button @onclick="Connect">Connect</button>
-
-    <hr>
-
-    <div>@registrationError</div>
-</div>
-
-
 <div class="container">
+    <!-- Registrera med ett användarnamn -->
     <div class="row">
-        <div class="col-md-6">
-            <h1>Shout to everyone!</h1>
+        <div class="col-md-6 mx-auto p-3 border bg-light">
+            <h1>Connect to ChatHub</h1>
             <div class="form-group">
                 <label>
-                    Message:
-                    <input @bind="shoutInput" size="50" />
+                    Your user name:
+                    <input @bind="myName" />
                 </label>
             </div>
-            <button @onclick="Shout" disabled="@(!IsConnected || !isRegistered)">Send</button>
+            <button @onclick="Connect">Connect</button>
 
             <hr>
 
-            <ul id="messagesList">
+            <div>@registrationError</div>
+        </div>
+    </div>
+    <div class="row">
+        <br/>
+    </div>
+    <div class="row">
+        <!-- Vänster kolumn: Skicka meddelanden till alla -->
+        <div class="col-md-6 d-flex flex-column justify-content-between p-3 border bg-light">
+            <h1 class="text-center">Shout to everyone!</h1>
+            <div class="form-group">
+                <label>Message:</label>
+                <input class="form-control" @bind="shoutInput" size="50" />
+            </div>
+            <div class="d-flex justify-content-center">
+                <button class="btn btn-primary" @onclick="Shout" disabled="@(!IsConnected || !isRegistered)">Shout</button>
+            </div>
+        </div>
+
+        <!-- Höger kolumn: Skicka privata meddelanden -->
+        <div class="col-md-6 d-flex flex-column justify-content-between p-3 border bg-light">
+            <h1 class="text-center">Whisper in private</h1>
+            <div class="form-group">
+                <label>Username of recipient:</label>
+                <input class="form-control" @bind="recipientUser" />
+            </div>
+            <div class="form-group">
+                <label>Message:</label>
+                <input class="form-control" @bind="whisperInput" size="50" />
+            </div>
+            <div class="d-flex justify-content-center">
+                <button class="btn btn-primary m-3" @onclick="Whisper" disabled="@(!IsConnected || !isRegistered)">Whisper</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Vänster kolumn: Meddelanden från alla -->
+        <div class="col-md-6 d-flex flex-column justify-content-between p-3 border bg-light">
+            <ul class="list-group overflow-auto" style="max-height: 300px;">
                 @foreach (var message in publicMessages)
                 {
-                    <li>@message</li>
+                    <li class="list-group-item">@message</li>
                 }
             </ul>
         </div>
 
-        <div class="col-md-6">
-            <h1>Whisper in private</h1>
-            <div class="form-group">
-                <label>
-                    Username of recipient:
-                    <input @bind="recipientUser" />
-                </label>
-            </div>
-            <div class="form-group">
-                <label>
-                    Message:
-                    <input @bind="whisperInput" size="50" />
-                </label>
-            </div>
-            <button @onclick="Whisper" disabled="@(!IsConnected || !isRegistered)">Send</button>
-
-            <hr>
-
-            <ul id="messagesList">
+        <!-- Höger kolumn: Inkommande privata meddelanden -->
+        <div class="col-md-6 d-flex flex-column justify-content-between p-3 border bg-light">
+            <ul class="list-group overflow-auto" style="max-height: 300px;">
                 @foreach (var message in privateMessages)
                 {
-                    <li>@message</li>
+                    <li class="list-group-item">@message</li>
                 }
             </ul>
         </div>
-
     </div>
 </div>
+
 
 @code {
     private HubConnection? hubConnection;
@@ -115,6 +123,7 @@
         hubConnection.On<string>("RegistrationSuccess", (message) =>
         {
             isRegistered = true;
+            registrationError = "";
             InvokeAsync(StateHasChanged);
         });
 
