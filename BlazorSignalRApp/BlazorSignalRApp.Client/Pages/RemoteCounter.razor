@@ -2,6 +2,7 @@
 @rendermode InteractiveWebAssembly
 @using Microsoft.AspNetCore.SignalR.Client;
 @inject NavigationManager Navigation
+@implements IAsyncDisposable
 
 
 <button class="btn btn-primary" @onclick="IncrementCounter">Increment counter</button>
@@ -26,6 +27,14 @@
         }   catch (Exception ex)
         {
             Console.WriteLine("Exception: " + ex);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (counterConnection is not null)
+        {
+            await counterConnection.DisposeAsync();
         }
     }
 }

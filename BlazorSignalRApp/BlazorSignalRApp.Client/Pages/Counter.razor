@@ -12,29 +12,29 @@
 
 @code {
     private int currentCount = 0;
-    private HubConnection? hubConnection;
+    private HubConnection? counterConnection;
 
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder()
+        counterConnection = new HubConnectionBuilder()
             .WithUrl(NavManager.ToAbsoluteUri("/counterhub"))
             .WithAutomaticReconnect()
             .Build();
 
-        hubConnection.On<int>("CounterIncremented", (value) =>
+        counterConnection.On<int>("CounterIncremented", (value) =>
         {
             currentCount += value;
             InvokeAsync(StateHasChanged);
         });
 
-        await hubConnection.StartAsync();
+        await counterConnection.StartAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
+        if (counterConnection is not null)
         {
-            await hubConnection.DisposeAsync();
+            await counterConnection.DisposeAsync();
         }
     }
 
