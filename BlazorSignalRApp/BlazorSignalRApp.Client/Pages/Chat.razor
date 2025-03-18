@@ -100,8 +100,6 @@
 
         hubConnection.On<string, string>("ReceivePrivateMessage", (user, message) =>
         {
-            Console.WriteLine("Recieving private message from " + user);
-            Console.WriteLine("Message: " + message);
             var encodedMsg = $"{user}: {message}";
             privateMessages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
@@ -150,7 +148,6 @@
     {
         if (hubConnection is not null)
         {
-            Console.WriteLine("Send message to " + recipientUser + ": " + whisperInput);
             await hubConnection.SendAsync("SendPrivateMessage", recipientUser, myName, whisperInput);
         }
     }
