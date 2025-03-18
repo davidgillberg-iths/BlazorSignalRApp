@@ -1,0 +1,41 @@
+﻿@page "/remotecounter"
+@rendermode InteractiveWebAssembly
+@using Microsoft.AspNetCore.SignalR.Client;
+@inject NavigationManager Navigation
+
+
+<button class="btn btn-primary" @onclick="IncrementCounter">Increment counter</button>
+
+@code {
+    private HubConnection? counterConnection;
+    private string? userInput;
+    private string? messageInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        counterConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/counterhub"))
+            .Build();
+
+        counterConnection.On<string, int>("CounterIncremented", (user, value) =>
+        {
+            var encodedMsg = $"{user}: {value}";
+            InvokeAsync(StateHasChanged);
+        });
+
+        Console.WriteLine("Chat booting up");
+
+        await counterConnection.StartAsync();
+    }
+
+    public async Task IncrementCounter()
+    {
+        try
+        {
+            await counterConnection.InvokeAsync("AddToTotal", 1);
+        }   catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex);
+        }
+    }
+}
