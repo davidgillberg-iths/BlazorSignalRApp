@@ -6,34 +6,83 @@
 
 <PageTitle>Chat</PageTitle>
 
-<div class="form-group">
-    <label>
-        User:
-        <input @bind="userInput" />
-    </label>
-</div>
-<div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
-</div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<div class="col-md-6">
+    <h1>Connect to ChatHub</h1>
+    <div class="form-group">
+        <label>
+            Your user name:
+            <input @bind="myName" />
+        </label>
+    </div>
+    <button @onclick="Connect">Connect</button>
 
-<hr>
+    <hr>
 
-<ul id="messagesList">
-    @foreach (var message in messages)
-    {
-        <li>@message</li>
-    }
-</ul>
+    <div>@registrationError</div>
+</div>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h1>Shout to everyone!</h1>
+            <div class="form-group">
+                <label>
+                    Message:
+                    <input @bind="shoutInput" size="50" />
+                </label>
+            </div>
+            <button @onclick="Shout" disabled="@(!IsConnected || !isRegistered)">Send</button>
+
+            <hr>
+
+            <ul id="messagesList">
+                @foreach (var message in publicMessages)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        </div>
+
+        <div class="col-md-6">
+            <h1>Whisper in private</h1>
+            <div class="form-group">
+                <label>
+                    Username of recipient:
+                    <input @bind="recipientUser" />
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    Message:
+                    <input @bind="whisperInput" size="50" />
+                </label>
+            </div>
+            <button @onclick="Whisper" disabled="@(!IsConnected || !isRegistered)">Send</button>
+
+            <hr>
+
+            <ul id="messagesList">
+                @foreach (var message in privateMessages)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        </div>
+
+    </div>
+</div>
 
 @code {
     private HubConnection? hubConnection;
-    private List<string> messages = [];
-    private string? userInput;
-    private string? messageInput;
+    private List<string> privateMessages = [];
+    private List<string> publicMessages = [];
+    private string? recipientUser;
+    private string? shoutInput;
+    private string? whisperInput;
+    private string? myName;
+    private string? registrationError;
+    private bool isRegistered = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,27 +90,59 @@
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
             .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection.On<string, string>("ReceivePrivateMessage", (user, message) =>
         {
+            Console.WriteLine("Recieving private message from " + user);
+            Console.WriteLine("Message: " + message);
             var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
+            privateMessages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
         });
 
-        Console.WriteLine("Chat booting up");
+        hubConnection.On<string, string>("ReceivePublicMessage", (user, message) =>
+        {
+            var encodedMsg = $"{user}: {message}";
+            publicMessages.Add(encodedMsg);
+            InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On<string>("RegistrationFailed", (message) =>
+        {
+            registrationError = message;
+            InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On<string>("RegistrationSuccess", (message) =>
+        {
+            isRegistered = true;
+            InvokeAsync(StateHasChanged);
+        });
 
         await hubConnection.StartAsync();
     }
 
-    private async Task Send()
+    private async Task Connect()
     {
-
-        Console.WriteLine("Trying to chat");
         if (hubConnection is not null)
         {
-            Console.WriteLine("Sending chat");
-            Console.WriteLine("Hub Connected: " + HubConnectionState.Connected);
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+            await hubConnection.SendAsync("RegisterUser", myName);
+        }
+    }
+
+    private async Task Shout()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SendPublicMessage", myName, shoutInput);
+        }
+    }
+
+    private async Task Whisper()
+    {
+        if (hubConnection is not null)
+        {
+            Console.WriteLine("Send message to " + recipientUser + ": " + whisperInput);
+            await hubConnection.SendAsync("SendPrivateMessage", recipientUser, myName, whisperInput);
         }
     }
 
