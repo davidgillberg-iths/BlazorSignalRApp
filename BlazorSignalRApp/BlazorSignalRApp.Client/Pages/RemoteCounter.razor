@@ -15,11 +15,6 @@
             .WithUrl(Navigation.ToAbsoluteUri("/counterhub"))
             .Build();
 
-        counterConnection.On<int>("CounterIncremented", (value) =>
-        {
-            InvokeAsync(StateHasChanged);
-        });
-
         await counterConnection.StartAsync();
     }
 
